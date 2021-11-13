@@ -7,27 +7,27 @@
 
     Bruno Amaral (amaral_bruno@id.uff.br)
 
-    Última atualização: 03/06/2021 - Feita por: Bruno Amaral (amaral_bruno@id.uff.br)
+    ï¿½ltima atualizaï¿½ï¿½o: 03/06/2021 - Feita por: Bruno Amaral (amaral_bruno@id.uff.br)
 
-    Descrição da atualização:
+    Descriï¿½ï¿½o da atualizaï¿½ï¿½o:
 
-    Mudança na função de execução da lógica de controle. Agora, os cálculos das 3 fases
-    estão resumidos em um loop de 3 iterações, uma para cada fase.
+    Mudanï¿½a na funï¿½ï¿½o de execuï¿½ï¿½o da lï¿½gica de controle. Agora, os cï¿½lculos das 3 fases
+    estï¿½o resumidos em um loop de 3 iteraï¿½ï¿½es, uma para cada fase.
 
-	Descrição do código:
+	Descriï¿½ï¿½o do cï¿½digo:
 
-	Este código é um teste para a nova estrutura de código proposta por Bruno Amaral
-	para o software do projeto de P&D da Light. Constitui a estrutura interna do código de controle
+	Este cï¿½digo ï¿½ um teste para a nova estrutura de cï¿½digo proposta por Bruno Amaral
+	para o software do projeto de P&D da Light. Constitui a estrutura interna do cï¿½digo de controle
 	do limitador do projeto.
 
-	Código recebe as entradas normalizadas da estrutura LCCHardware, verifica se há curto
-	na rede e realiza o controle de impedância do equipamento.
+	Cï¿½digo recebe as entradas normalizadas da estrutura LCCHardware, verifica se hï¿½ curto
+	na rede e realiza o controle de impedï¿½ncia do equipamento.
 
 	Uso:
 
-	1) Chamar função LCCSoft_criar para inicializar a estrutura com os parâmetros desejados
-    2) Chamar função LCCSoft_executar para executar o algoritmo
-    3) Ao fim da execução do programa, ou em caso de erro, chamar LCCSoft_destruir e reinicializar a
+	1) Chamar funï¿½ï¿½o LCCSoft_criar para inicializar a estrutura com os parï¿½metros desejados
+    2) Chamar funï¿½ï¿½o LCCSoft_executar para executar o algoritmo
+    3) Ao fim da execuï¿½ï¿½o do programa, ou em caso de erro, chamar LCCSoft_destruir e reinicializar a
     estrutura
 
 */
@@ -35,7 +35,7 @@
 #ifndef LIMITADOR_SOFT
 #define LIMITADOR_SOFT
 
-//Macros para modos de operação
+//Macros para modos de operaï¿½ï¿½o
 #define LCC_SOFT_LIM_PLEN 0
 #define LCC_SOFT_MOD_I 1
 
@@ -43,29 +43,30 @@
 typedef struct limitador_cc LCCSoft;
 
 /*
-    Nome da função: LCCSoft_criar
+    Nome da funï¿½ï¿½o: LCCSoft_criar
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Aloca memória para um ponteiro do tipo LCCSoft*
+    Aloca memï¿½ria para um ponteiro do tipo LCCSoft*
 
     Tipo de retorno: LimitadroCC*
 
     Argumentos:
 
-    double *tensoes_fase: ponteiro para tensões de fase das 3 fases do sistema (recomenda-se em pu)
+    double *tensoes_fase: ponteiro para tensï¿½es de fase das 3 fases do sistema (recomenda-se em pu)
     double *correntes_linha: ponteiro para correntes de linha das 3 fases do sistema (recomenda-se em pu)
-    double *ref_corrente_linha: ponteiro para referência de corrente de linha para
-    controle de modulação de impedância
-    double *ref_pwm: ponteiro para valor de referência do PWM
-    double frequencia_nominal: frequência nominal do sistema
-    double limite_sup_corrente: limite superior de corrente para detecção em pu
-    double limite_inf_corrente: limite inferior de corrente para saída do curto em pu
-    double freq_amostragem: frequência de amostragem do sistema em Hz
-    int modo_operacao: modo de operação do limitador; ; 0- Limitação plena; 1- Controle de Corrente.
+    double *ref_corrente_linha: ponteiro para referï¿½ncia de corrente de linha para
+    controle de modulaï¿½ï¿½o de impedï¿½ncia
+    double *ref_pwm: ponteiro para valor de referï¿½ncia do PWM
+    double frequencia_nominal: frequï¿½ncia nominal do sistema
+    double limite_sup_corrente: limite superior de corrente para detecï¿½ï¿½o em pu
+    double limite_inf_corrente: limite inferior de corrente para saï¿½da do curto em pu
+    double lambda: fator de sensibilidade. Deve ser um valor entre 0 e 1 
+    double freq_amostragem: frequï¿½ncia de amostragem do sistema em Hz
+    int modo_operacao: modo de operaï¿½ï¿½o do limitador; ; 0- Limitaï¿½ï¿½o plena; 1- Controle de Corrente.
 */
 
-//Protótipos de funções
+//Protï¿½tipos de funï¿½ï¿½es
 LCCSoft*
 LCCSoft_criar(double *tensoes_fase_norm,
                   double *correntes_linha_norm,
@@ -74,14 +75,15 @@ LCCSoft_criar(double *tensoes_fase_norm,
                   double frequencia_nominal,
                   double limite_sup_corrente,
                   double limite_inf_corrente,
+                  double lambda,
                   double freq_amostragem,
                   int modo_operacao);
 /*
-    Nome da função: LCCSoft_destruir
+    Nome da funï¿½ï¿½o: LCCSoft_destruir
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Desaloca memória para um ponteiro do tipo LCCSoft*
+    Desaloca memï¿½ria para um ponteiro do tipo LCCSoft*
 
     Tipo de retorno: void
 
@@ -94,11 +96,11 @@ void
 LCCSoft_destruir(LCCSoft *LCC);
 
 /*
-    Nome da função: LCCSoft_executar
+    Nome da funï¿½ï¿½o: LCCSoft_executar
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Executa o código de controle do limitador
+    Executa o cï¿½digo de controle do limitador
 
     Tipo de retorno: void
 
@@ -111,11 +113,11 @@ void
 LCCSoft_executar(LCCSoft *LCC);
 
 /*
-    Nome da função: LCCSoft_obter_var_internas
+    Nome da funï¿½ï¿½o: LCCSoft_obter_var_internas
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Obtém variáveis internas da estrutura do LCCSoft
+    Obtï¿½m variï¿½veis internas da estrutura do LCCSoft
 
     Tipo de retorno: void
 

@@ -5,13 +5,13 @@
 
     Criado por: Bruno Amaral
 
-    Código destinado ao trabalho de conclusão de curso
+    Cï¿½digo destinado ao trabalho de conclusï¿½o de curso
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Rotina de interface entre o código de controle e a plataforma PSCAD.
-    Ela será chamada pela rotina implementada dentro do bloco que modela
-    a UMC na simulação do PSCAD.
+    Rotina de interface entre o cï¿½digo de controle e a plataforma PSCAD.
+    Ela serï¿½ chamada pela rotina implementada dentro do bloco que modela
+    a UMC na simulaï¿½ï¿½o do PSCAD.
 
 
 */
@@ -32,18 +32,20 @@ void HAL_PSCAD (int *leitura_tensoes_fase,
                 int *modo_op,
                 double *dados_internos)
 {
-    //Declaração de variáveis
+    //Declaraï¿½ï¿½o de variï¿½veis
     static LCCHard *meuLCC;
     static int iteracao=0;
+    static double lambda = 0.98; // Fator de sensibilidade
 
     if(iteracao==0)
     {
-        //Alocando memória para estrutura LCCHard
+        //Alocando memï¿½ria para estrutura LCCHard
         meuLCC=LCCHard_criar(*tensao_linha_base,
                              *corrente_linha_base,
                              *frequencia_nominal,
                              *limite_superior_corrente,
                              *limite_inferior_corrente,
+                             lambda,
                              *freq_amostragem,
                              *tensao_max_adc,
                              *res_adc,
@@ -63,10 +65,10 @@ void HAL_PSCAD (int *leitura_tensoes_fase,
         LCCHard_atualizar_saidas(saida_ref_pwm,
                                  meuLCC);
 
-        //Lendo variáveis internas do limitador
+        //Lendo variï¿½veis internas do limitador
         LCCHard_obter_var_internas(dados_internos, meuLCC);
 
-        //REALIZO ALOCAÇÃO SOMENTE UMA VEZ
+        //REALIZO ALOCAï¿½ï¿½O SOMENTE UMA VEZ
         iteracao++;
     }else
     {
@@ -83,7 +85,7 @@ void HAL_PSCAD (int *leitura_tensoes_fase,
         LCCHard_atualizar_saidas(saida_ref_pwm,
                                  meuLCC);
 
-        //Lendo variáveis internas do limitador
+        //Lendo variï¿½veis internas do limitador
         LCCHard_obter_var_internas(dados_internos, meuLCC);
     }
 

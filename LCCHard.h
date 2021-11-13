@@ -8,15 +8,15 @@
     Bruno Amaral (amaral_bruno@id.uff.br)
 
     Grupo de trabalho: NITEE
-    Código destinado ao Trabalho de Conclusão de Curso
+    Cï¿½digo destinado ao Trabalho de Conclusï¿½o de Curso
 
-    Última atualização: 05/06/2021 - Feita por: Bruno Amaral (amaral_bruno@id.uff.br)
+    ï¿½ltima atualizaï¿½ï¿½o: 05/06/2021 - Feita por: Bruno Amaral (amaral_bruno@id.uff.br)
 
-    Descrição da atualização:
+    Descriï¿½ï¿½o da atualizaï¿½ï¿½o:
 
-    Foi usada como base a versão LimitadorHard para criação deste conjunto de arquivos
+    Foi usada como base a versï¿½o LimitadorHard para criaï¿½ï¿½o deste conjunto de arquivos
 
-	Descrição do código:
+	Descriï¿½ï¿½o do cï¿½digo:
 
 	Uso:
 
@@ -25,7 +25,7 @@
 #ifndef LCC_HAL_PSCAD
 #define LCC_HAL_PSCAD
 
-//Macros para usuário definir modos de operação
+//Macros para usuï¿½rio definir modos de operaï¿½ï¿½o
 #define LCC_HARD_LIM_PLEN 0
 #define LCC_HARD_MOD_I 1
 
@@ -33,35 +33,37 @@
 typedef struct limitador_cc_hardware LCCHard;
 
 /*
-    Nome da função: LCCHard_criar
+    Nome da funï¿½ï¿½o: LCCHard_criar
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Aloca memória para um ponteiro do tipo LCCHard
+    Aloca memï¿½ria para um ponteiro do tipo LCCHard
 
     Tipo de retorno: LimitadroCCHardware*
 
     Argumentos:
 
-    double tensao_linha_base: tensão base de linha do sistema em kV
+    double tensao_linha_base: tensï¿½o base de linha do sistema em kV
     double corrente_linha_base: corrente base de linha do sistema em kA
-    double frequencia_nominal: frequência nominal do sistema em Hz
-    double limite_sup_corrente: limite superior de corrente para decisão sobre curto-circuito (pu)
-    double limite_inf_corrente: limite inferior de corrente para decisão sobre curto-circuito (pu)
-    double freq_amostragem: frequência de amostragem do sistema
-    double tensao_max_adc: tensão de máxima (nominal) de operação do ADC. Ex: 3.3V, 5V...
-    int resolucao_bits_adc: resuloção do conversor analógico-digital em bits. Ex: 10 bits, 12 bits, 16 bits.
-    double ganho_condicionamento: valor na operação sobre o sinal de saída do sensor: leitura_sensor/ganho.
-    int modo_operacao: modo de operação do limitador; ; 0- Limitação plena; 1- Controle de Corrente.
+    double frequencia_nominal: frequï¿½ncia nominal do sistema em Hz
+    double limite_sup_corrente: limite superior de corrente para decisï¿½o sobre curto-circuito (pu)
+    double limite_inf_corrente: limite inferior de corrente para decisï¿½o sobre curto-circuito (pu)
+    double lambda: fator de sensibilidade. Deve ser um valor entre 0 e 1 
+    double freq_amostragem: frequï¿½ncia de amostragem do sistema
+    double tensao_max_adc: tensï¿½o de mï¿½xima (nominal) de operaï¿½ï¿½o do ADC. Ex: 3.3V, 5V...
+    int resolucao_bits_adc: resuloï¿½ï¿½o do conversor analï¿½gico-digital em bits. Ex: 10 bits, 12 bits, 16 bits.
+    double ganho_condicionamento: valor na operaï¿½ï¿½o sobre o sinal de saï¿½da do sensor: leitura_sensor/ganho.
+    int modo_operacao: modo de operaï¿½ï¿½o do limitador; ; 0- Limitaï¿½ï¿½o plena; 1- Controle de Corrente.
 */
 
-//Protótipos de funções
+//Protï¿½tipos de funï¿½ï¿½es
 LCCHard*
 LCCHard_criar(double tensao_linha_base,
               double corrente_linha_base,
               double frequencia_nominal,
               double limite_sup_corrente,
               double limite_inf_corrente,
+              double lambda,
               double freq_amostragem,
               double tensao_max_adc,
               int resolucao_bits_adc,
@@ -69,11 +71,11 @@ LCCHard_criar(double tensao_linha_base,
               int modo_operacao);
 
 /*
-    Nome da função: LCCHard_destruir
+    Nome da funï¿½ï¿½o: LCCHard_destruir
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Desaloca memória para um ponteiro do tipo LCCHard*
+    Desaloca memï¿½ria para um ponteiro do tipo LCCHard*
 
     Tipo de retorno: void
 
@@ -87,19 +89,19 @@ void
 LCCHard_destruir(LCCHard *LCC);
 
 /*
-    Nome da função: LCCHard_atualizar_entradas
+    Nome da funï¿½ï¿½o: LCCHard_atualizar_entradas
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Normaliza e prepara as variáveis de entrada para as camadas superiores do código
+    Normaliza e prepara as variï¿½veis de entrada para as camadas superiores do cï¿½digo
 
     Tipo de retorno: void
 
     Argumentos:
 
-    int *leituras_tensoes: ponteiro para vetor de 3 posições com valores quantizados de tensão do sistema
-    int *leituras_correntes: ponteiro para vetor de 3 posições com valores quantizados de corrente do sistema
-    double *ref_corrente: ponteiro para variável com a referência em pu para a corrente limitada
+    int *leituras_tensoes: ponteiro para vetor de 3 posiï¿½ï¿½es com valores quantizados de tensï¿½o do sistema
+    int *leituras_correntes: ponteiro para vetor de 3 posiï¿½ï¿½es com valores quantizados de corrente do sistema
+    double *ref_corrente: ponteiro para variï¿½vel com a referï¿½ncia em pu para a corrente limitada
     LCCHard *LCC: ponteiro para uma estrutura do tipo LCCHard*
 */
 
@@ -110,17 +112,17 @@ LCCHard_atualizar_entradas(int *leituras_tensoes,
                            LCCHard *LCC);
 
 /*
-    Nome da função: LCCHard_atualizar_saidas
+    Nome da funï¿½ï¿½o: LCCHard_atualizar_saidas
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Retorna as saídas do código de controle
+    Retorna as saï¿½das do cï¿½digo de controle
 
     Tipo de retorno: void
 
     Argumentos:
 
-    double *referencias_pwm: referências das 3 fases calculadas para o PWM
+    double *referencias_pwm: referï¿½ncias das 3 fases calculadas para o PWM
     LCCHard *LCC: ponteiro para uma estrutura do tipo LCCHard*
 */
 
@@ -129,11 +131,11 @@ LCCHard_atualizar_saidas(double *referencias_pwm,
 									 LCCHard *LCC);
 
 /*
-    Nome da função: LCCHard_obter_var_internas
+    Nome da funï¿½ï¿½o: LCCHard_obter_var_internas
 
-    Descrição:
+    Descriï¿½ï¿½o:
 
-    Obtém variáveis internas da estrutura do LCCHard
+    Obtï¿½m variï¿½veis internas da estrutura do LCCHard
 
     Tipo de retorno: void
 
