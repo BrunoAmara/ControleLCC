@@ -259,7 +259,7 @@ LCCSoft_criar(double *tensoes_fase_norm,
 
     // Fator de sensibilidade lambda e sensibilidade
     //lambda = 0.98;
-    if (lambda != 1.0)
+    if ((lambda < 1.0) && (lambda >= 0.0))
     {
         LCC->sensib = 1.0/(1.0-lambda);
     }else
@@ -267,7 +267,6 @@ LCCSoft_criar(double *tensoes_fase_norm,
         LCC->sensib = 1.5; // Valor padrão em caso de erro
     }
     
-
     //EPLL
     LCC->amplitude_base=1.0; //pu. OBS: assume-se que os valores de base usados sejam os nominais do sistema
     LCC->ganho_um=300.0; //Consultar livro do Ghartemani sobre PLL
