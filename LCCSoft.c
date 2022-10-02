@@ -258,7 +258,6 @@ LCCSoft_criar(double *tensoes_fase_norm,
     LCC->const_limite_saida_curto=NUM_AMOST_SAIDA_CURTO;
 
     // Fator de sensibilidade lambda e sensibilidade
-    //lambda = 0.98;
     if ((lambda < 1.0) && (lambda >= 0.0))
     {
         LCC->sensib = 1.0/(1.0-lambda);
