@@ -17,7 +17,7 @@
 //Ideia: criar um núcleo principal, que estima componentes fundamentais de sequência positiva e, caso necessário, chama outros núcleos, conforme definido
 
 //Inclui somente o cabeçalho de NucleoEPLL
-#include "../../include/nitee/FiltroPassaBanda.h"
+#include "FiltroPassaBanda.h"
 #include <stdlib.h>
 
 //Definindo os tipos declarados em EPLL.h
@@ -72,7 +72,6 @@ FiltroPassaBanda_criar(
 }
 
 //Algoritmo de controle
-__attribute__((ramfunc))
 void 
 FiltroPassaBanda_computa(FiltroPassaBanda *fpb)
 {
