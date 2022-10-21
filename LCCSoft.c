@@ -1,42 +1,49 @@
 #include "LCCSoft.h"
 #include "EPLLIII.h"
+#include "mmq.h"
+#include "FiltroPassaBanda.h"
 #include "ControlePID.h"
 #include <math.h>
 #include <stdlib.h>
 
-//Macros para acesso de endereços
-#define EDR_FASE_A 0x00 //Endereço Fase A
-#define EDR_FASE_B 0x01 //Endereço Fase B
-#define EDR_FASE_C 0x02 //Endereço Fase C
+#define AMOSTRAS_MMQ            16
+
+//Macros para acesso de endereï¿½os
+#define EDR_FASE_A 0x00 //Endereï¿½o Fase A
+#define EDR_FASE_B 0x01 //Endereï¿½o Fase B
+#define EDR_FASE_C 0x02 //Endereï¿½o Fase C
 
 //Macro para freq angular
 #define dois_pi 6.283185307
 
-//Macro para intervalo de frequência
+//Macro para intervalo de frequÃªncia
 #define TOL_FREQ 5.0
 
-//Macros para auxílio nos cálculos
+//Macros para auxÃ­lio nos cÃ¡lculos
 #define RAIZ_DE_TRES 1.732050808
 
-//Macro para saída de curto
+//Macro para saÃ­da de curto
 #define NUM_AMOST_SAIDA_CURTO 75
 
-//Número de fases
+//NÃºmero de fases
 #define N_FASES 3
 
-//Definição da estrutura
+//DefiniÃ§Ã£o da estrutura
 struct limitador_cc
 {
     //Atributos
 
-    // *** Entradas e saídas
+    // *** Entradas e saÃ­das
 
-    //Grandezas elétricas de entrada normalizadas (pu)
+    //Grandezas elÃ©tricas de entrada normalizadas (pu)
     double *tensoes_fase_normalizadas;
     double *correntes_linha_normalizadas;
     double *ref_corrente_linha_normalizada;
 
-    //Variável de saída para chaveamento
+    // Grandezas filtradas
+    double *i_linha_filt;
+
+    //Variï¿½vel de saï¿½da para chaveamento
     double *ref_pwm;
 
     // *** EPLL ***
@@ -45,9 +52,9 @@ struct limitador_cc
     double amptd_est_corrente_norm[3]; //Amplitudes pico
     double fase_est_corrente_norm[3];
     double sinais_est_corrente_norm[3];
-    double frequencia_angular_estimada; //Frequência angular estimada
+    double frequencia_angular_estimada; //FrequÃªncia angular estimada
 
-    //Parâmetros exclusivos do EPLL III
+    //ParÃ¢metros exclusivos do EPLL III
     double amplitude_base;
     double ganho_um;
     double ganho_dois;
@@ -55,12 +62,15 @@ struct limitador_cc
     double freq_max;
     double freq_min;
 
+    // Filtro
+    FiltroPassaBanda *fpb[N_FASES];
+
     //Estrutura para o EPLL
-    EPLLIII *meuEPLL;
+    MMQ *estimador_amplitude;
 
     // *** Controle PI ***
 
-    //Variáveis e parâmetros controle PI
+    //VariÃ¡veis e parÃ¢metros controle PI
     double erro_corrente_fase[3];
     double saida_ctrl_pi_fase[3];
     double ctrl_pi_valor_max;
@@ -69,30 +79,30 @@ struct limitador_cc
     double ki;
     double kd;
 
-    //Controles PI para modulação de impedância
+    //Controles PI para modulaÃ§Ã£o de impedÃ¢ncia
     ControladorPID *ControlePIFase[N_FASES];
 
     // *** LCC ***
 
-    //Funções e parâmetros do controle
+    //FunÃ§Ãµes e parÃ¢metros do controle
     int modo_operacao;
     double freq_amostragem;
     double frequencia_nominal;
     void (*detectar_e_limitar)(LCCSoft*);
 
-    //Variáveis para detecção de curto em cada fase
-    double limite_sup_corrente; //Limite superior de corrente em pu (Critério de amplitude)
-    double limite_inf_corrente; //Limite inferior de corrente em pu (Critério de amplitude)
-    double limite_sup_dif; //Limite superior de diferença em pu (Critério de derivada)
-    double limite_inf_dif; //Limite inferior de diferença em pu (Critério de derivada)
-    double dif_est[3]; //Estimativa de diferença
+    //VariÃ¡veis para detecÃ§Ã£o de curto em cada fase
+    double limite_sup_corrente; //Limite superior de corrente em pu (CritÃ©rio de amplitude)
+    double limite_inf_corrente; //Limite inferior de corrente em pu (CritÃ©rio de amplitude)
+    double limite_sup_dif; //Limite superior de diferenÃ§a em pu (CritÃ©rio de derivada)
+    double limite_inf_dif; //Limite inferior de diferenÃ§a em pu (CritÃ©rio de derivada)
+    double dif_est[3]; //Estimativa de diferenÃ§a
     double correntes_ant[3]; //Correntes do instante anterior
     int const_limite_saida_curto;
     int const_saida_curto[3];
     int estado_curto_fase[3];
 };
 
-//Função auxiliar
+//FunÃ§Ã£o auxiliar
 double
 modulo_limitador(double valor)
 {
@@ -103,21 +113,21 @@ modulo_limitador(double valor)
     return valor;
 }
 
-//Funções para detecção e controle de impedância para cada modo de operação
+//FunÃ§Ãµes para detecÃ§Ã£o e controle de impedÃ¢ncia para cada modo de operaÃ§Ã£o
 void
 detectar_limitar_modo_lim_plen(LCCSoft *LCC)
 {
-    //Variável para iteração
+    //VariÃ¡vel para iteraÃ§Ã£o
     static int k;
 
-    //*** detecções e controle de corrente por fase ***
+    //*** detecÃ§Ãµes e controle de corrente por fase ***
 
     for (k=0; k<N_FASES; k++)
     {
-        //Calculando diferença para cada fase
+        //Calculando diferenÃ§a para cada fase
         LCC->dif_est[k]=*(LCC->correntes_linha_normalizadas+k)-LCC->correntes_ant[k];
 
-        //Realizando a detecção de cada fase
+        //Realizando a detecÃ§Ã£o de cada fase
         if(!LCC->estado_curto_fase[k])
         {
             if((modulo_limitador(LCC->amptd_est_corrente_norm[k])>LCC->limite_sup_corrente))
@@ -128,20 +138,20 @@ detectar_limitar_modo_lim_plen(LCCSoft *LCC)
                 //Abro as chaves
                 *(LCC->ref_pwm+k)=-1.0; //Portadora entre 0 e 1. -1 garante chave aberta sem erros
 
-                //Zero variável auxiliar para saída de curto
+                //Zero variÃ¡vel auxiliar para saÃ­da de curto
                 LCC->const_saida_curto[k]=0;
             }
         }else
         {
             if((modulo_limitador(LCC->amptd_est_corrente_norm[k])<=LCC->limite_inf_corrente))
             {
-                //Incremento variável auxiliar
+                //Incremento variÃ¡vel auxiliar
                 LCC->const_saida_curto[k]++;
             }
 
             if(LCC->const_saida_curto[k]==LCC->const_limite_saida_curto)
             {
-                //Mudo para estado de não curto
+                //Mudo para estado de nÃ£o curto
                 LCC->estado_curto_fase[k]=0;
 
                 //Fecho as chaves
@@ -156,17 +166,17 @@ detectar_limitar_modo_lim_plen(LCCSoft *LCC)
 void
 detectar_limitar_modo_mod_i(LCCSoft *LCC)
 {
-    //Variável para iteração
+    //VariÃ¡vel para iteraÃ§Ã£o
     static int k;
 
-    //*** detecções e controle de corrente por fase ***
+    //*** detecÃ§Ãµes e controle de corrente por fase ***
 
     for (k=0; k<N_FASES; k++)
     {
-        //Calculando diferença para cada fase
+        //Calculando diferenÃ§a para cada fase
         LCC->dif_est[k]=*(LCC->correntes_linha_normalizadas+k)-LCC->correntes_ant[k];
 
-        //Realizando a detecção de cada fase
+        //Realizando a detecÃ§Ã£o de cada fase
         if(!LCC->estado_curto_fase[k])
         {
             if((modulo_limitador(LCC->amptd_est_corrente_norm[k])>LCC->limite_sup_corrente))
@@ -174,20 +184,20 @@ detectar_limitar_modo_mod_i(LCCSoft *LCC)
                 //Mudo para estado de curto
                 LCC->estado_curto_fase[k]=1;
 
-                //Zero variável auxiliar para saída de curto
+                //Zero variÃ¡vel auxiliar para saÃ­da de curto
                 LCC->const_saida_curto[k]=0;
             }
         }else
         {
             if((modulo_limitador(LCC->amptd_est_corrente_norm[k])<=LCC->limite_inf_corrente))
             {
-                //Incremento variável auxiliar
+                //Incremento variÃ¡vel auxiliar
                 LCC->const_saida_curto[k]++;
             }
 
             if(LCC->const_saida_curto[k]==LCC->const_limite_saida_curto)
             {
-                //Mudo para estado de não curto
+                //Mudo para estado de nÃ£o curto
                 LCC->estado_curto_fase[k]=0;
                 *(LCC->ref_pwm+EDR_FASE_A)=1.0;
 
@@ -196,7 +206,7 @@ detectar_limitar_modo_mod_i(LCCSoft *LCC)
             }
         }
 
-        //Controle de impedância
+        //Controle de impedÃ¢ncia
         if(LCC->estado_curto_fase[k])
         {
             //Calculando erro do PI
@@ -206,7 +216,7 @@ detectar_limitar_modo_mod_i(LCCSoft *LCC)
             //Executando controle PI
             ControladorPID_executar(LCC->ControlePIFase[k]);
 
-            //Atribuindo saída do PI a ref de pwm
+            //Atribuindo saÃ­da do PI a ref de pwm
             *(LCC->ref_pwm+k)=LCC->saida_ctrl_pi_fase[k];
         }else
         {
@@ -217,7 +227,7 @@ detectar_limitar_modo_mod_i(LCCSoft *LCC)
 
 }
 
-//Definições das funções do .h
+//DefiniÃ§Ãµes das funÃ§Ãµes do .h
 LCCSoft*
 LCCSoft_criar(double *tensoes_fase_norm,
                   double *correntes_linha_norm,
@@ -229,7 +239,7 @@ LCCSoft_criar(double *tensoes_fase_norm,
                   double freq_amostragem,
                   int modo_operacao)
 {
-    //Variável para iteração
+    //VariÃ¡vel para iteraÃ§Ã£o
     int k;
 
     //Criando estrutura e iniciando-a
@@ -237,10 +247,11 @@ LCCSoft_criar(double *tensoes_fase_norm,
 
     // *** Inicializando atributos ***
 
-    //Variáveis e parâmetros da lógica do LCCSOFT
+    //VariÃ¡veis e parÃ¢metros da lÃ³gica do LCCSOFT
     LCC->tensoes_fase_normalizadas=tensoes_fase_norm;
     LCC->correntes_linha_normalizadas=correntes_linha_norm;
     LCC->ref_corrente_linha_normalizada=ref_corrente_linha_norm;
+    LCC->i_linha_filt = malloc(sizeof(double)*3);
     LCC->ref_pwm=ref_pwm;
     LCC->freq_amostragem=freq_amostragem;
     LCC->limite_sup_corrente=limite_sup_corrente;
@@ -262,7 +273,7 @@ LCCSoft_criar(double *tensoes_fase_norm,
 
     for (k=0; k<N_FASES; k++)
     {
-        //Saída
+        //SaÃ­da
         LCC->ref_pwm[k]=1.0;
 
         //LCC
@@ -274,25 +285,33 @@ LCCSoft_criar(double *tensoes_fase_norm,
         LCC->amptd_est_corrente_norm[k]=0.0;
         LCC->sinais_est_corrente_norm[k]=0.0;
 
-        //Detecção
+        //DetecÃ§Ã£o
         LCC->estado_curto_fase[k]=0;
         LCC->const_saida_curto[k]=0;
         LCC->correntes_ant[k]=0.0;
         LCC->dif_est[k]=0.0;
+
+        LCC->fpb[k] = FiltroPassaBanda_criar(
+            LCC->correntes_linha_normalizadas+k,
+            LCC->i_linha_filt+k,
+            2.0f*sqrtf(2.0f),
+            CTE_2PI*frequencia_nominal,
+            freq_amostragem);
+
     }
 
-    //Se modo de operação for limitação plena, não há necessidade de controle PI
-    //Definindo modo de operação
+    //Se modo de operaÃ§Ã£o for limitaÃ§Ã£o plena, nÃ£o hÃ¡ necessidade de controle PI
+    //Definindo modo de operaÃ§Ã£o
     if (LCC->modo_operacao==LCC_SOFT_LIM_PLEN)
     {
-        //Limitação plena
+        //LimitaÃ§Ã£o plena
         LCC->detectar_e_limitar=detectar_limitar_modo_lim_plen;
     }else
     {
-        //Limitação por modulação de corrente
+        //LimitaÃ§Ã£o por modulaÃ§Ã£o de corrente
         LCC->detectar_e_limitar=detectar_limitar_modo_mod_i;
 
-        //Inicializando variáveis e estruturas dos controles PI
+        //Inicializando variÃ¡veis e estruturas dos controles PI
         LCC->kp=200.0;
         LCC->ki=1000.0;
         LCC->kd=0.0;
@@ -317,22 +336,17 @@ LCCSoft_criar(double *tensoes_fase_norm,
                                                          PI);
         }
 
-    } //Fim IF modo de operação
+    } //Fim IF modo de operaÃ§Ã£o
 
-    //Criando estrutura para o EPLL III
-    LCC->meuEPLL=EPLLIII_criar(LCC->correntes_linha_normalizadas,
-                            LCC->amptd_est_corrente_norm,
-                            LCC->fase_est_corrente_norm,
-                            &LCC->frequencia_angular_estimada,
-                            LCC->sinais_est_corrente_norm,
-                            LCC->amplitude_base,
-                            LCC->frequencia_nominal,
-                            LCC->freq_amostragem,
-                            LCC->ganho_um,
-                            LCC->ganho_dois,
-                            LCC->ganho_tres);
+    // Criando estrutura para estimador de amplitude (mÃ­nimos quadrados)
+    LCC->estimador_amplitude = MMQ_criar(
+                                          LCC->i_linha_filt,
+                                          LCC->amptd_est_corrente_norm,
+                                          LCC->frequencia_nominal,
+                                          LCC->freq_amostragem,
+                                          AMOSTRAS_MMQ);
 
-    //Verificando alocação
+    //Verificando alocaÃ§Ã£o
 
     //Retornando estrutura
     return LCC;
@@ -347,8 +361,13 @@ LCCSoft_destruir(LCCSoft *LCC)
 void
 LCCSoft_executar(LCCSoft *LCC)
 {
-    //Executando o PLL
-    EPLLIII_executar(LCC->meuEPLL);
+    // Filtrando
+    FiltroPassaBanda_computa(LCC->fpb[EDR_FASE_A]);
+    FiltroPassaBanda_computa(LCC->fpb[EDR_FASE_B]);
+    FiltroPassaBanda_computa(LCC->fpb[EDR_FASE_C]);
+
+    // Calculando amplitudes
+    MMQ_computa(LCC->estimador_amplitude);
 
     //Detectando e limitando
     LCC->detectar_e_limitar(LCC);
