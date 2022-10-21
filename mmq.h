@@ -36,10 +36,10 @@ typedef struct MMQ MMQ;
  *	Argumentos:
  *		i_amostrado: ponteiro para o endere�o do vetor de valores de corrente
  *amostrados
- *  Aloca��o de mem�ria: tr�s vari�veis tipo float
+ *  Aloca��o de mem�ria: tr�s vari�veis tipo double
  *
  *      estimativa: ponteiro para o endere�o do vetor de estima��o
- *  Aloca��o de mem�ria: tr�s vari�veis tipo float
+ *  Aloca��o de mem�ria: tr�s vari�veis tipo double
  *
  *		f_nominal: frequencia nominal da rede utilizada em calculos dentro da
  *estrutura MMQ_criar
@@ -51,10 +51,10 @@ typedef struct MMQ MMQ;
  *	Valor de retorno: um ponteiro para uma vari�vel do tipo MMQ
  */
 MMQ* MMQ_criar(
-	volatile float* i_amostrado,
-	volatile float* estimativa,
-	float f_nominal,
-	float f_amostragem,
+	 double* i_amostrado,
+	 double* estimativa,
+	double f_nominal,
+	double f_amostragem,
 	int n_amostras
 	);
 /*

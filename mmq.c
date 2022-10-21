@@ -21,41 +21,41 @@
 
 //declara��o da fun�ao de multiplica��o
 static void matriz_multiplicacao(
-	float** matriz_esquerda,
-	float** matriz_direita,
-	float** matriz_saida,
+	double** matriz_esquerda,
+	double** matriz_direita,
+	double** matriz_saida,
 	int linha_esquerda,
 	int linha_direita,
 	int coluna_direita
 	);
 
 //fun��o para achar o determinante de uma matriz
-static float determinante(
-	float** matriz_entrada,
+static double determinante(
+	double** matriz_entrada,
 	int dimensao,
-	float** elem_det
+	double** elem_det
 	);
 
 static void cofator(
-	float** matriz_entrada,
+	double** matriz_entrada,
 	int dimensao,
-	float** elem_det,
-	float** matriz_saida
+	double** elem_det,
+	double** matriz_saida
 );
 
 static void transposta(
-	float** matriz_entrada,
+	double** matriz_entrada,
 	int linha,
 	int coluna,
-	float** matriz_saida
+	double** matriz_saida
 );
 
 static void inversa(
-	float** matriz_entrada,
-	float** fatorial,
-	float** elem_det,
+	double** matriz_entrada,
+	double** fatorial,
+	double** elem_det,
 	int dimensao,
-	float** matriz_saida
+	double** matriz_saida
 );
 
 /*
@@ -72,20 +72,20 @@ I_ant
 */
 struct MMQ
 {
-	volatile float* i_entrada;
-	volatile float* estimativas;
-	float** matriz_pinvS;
-	float** matriz_pSRS;
-	float** I_aux;
-	float*** I_ant;
-	float** I;
+	 double* i_entrada;
+	 double* estimativas;
+	double** matriz_pinvS;
+	double** matriz_pSRS;
+	double** I_aux;
+	double*** I_ant;
+	double** I;
 };
 
 MMQ* MMQ_criar(
-	volatile float* i_amost,
-	volatile float* estimativa,
-	float f_nominal,
-	float f_amostragem,
+	 double* i_amost,
+	 double* estimativa,
+	double f_nominal,
+	double f_amostragem,
 	int n_amostras
 )
 {
@@ -98,17 +98,17 @@ MMQ* MMQ_criar(
 	// Variaveis de iteracao
 	int l=0, k=0;
 	// Matrizes utilizados no processo
-	float** matriz_R;
-	float** matriz_RS;
-	float** matriz_transposta;
-	float** fatorial;
-	float** StxS;
-	float** elemento_det;
-	float** matriz_inversa;
+	double** matriz_R;
+	double** matriz_RS;
+	double** matriz_transposta;
+	double** fatorial;
+	double** StxS;
+	double** elemento_det;
+	double** matriz_inversa;
 	// Vetor indicando a ordem das componentes do sinal(1=fundamental)
-	float comp_sinal[COMPS_SINAL];
+	double comp_sinal[COMPS_SINAL];
 	// Velocidade angular da rede
-	float velocidade_ang;
+	double velocidade_ang;
 
 	// Atribuindo valores para as vari�veis
 	comp_sinal[0] = 1.0f;
@@ -120,18 +120,18 @@ MMQ* MMQ_criar(
 	mmq->i_entrada = i_amost;
 
 	// Alocacao de memoria para cada linha das matrizes(ponteiros de ponteiro)
-    matriz_transposta = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
-    mmq->matriz_pSRS = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
-    matriz_inversa = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
-    mmq->I_aux = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
-    elemento_det =(float**)calloc(DIM_MATRIX_AUX,sizeof(float*));
-    mmq->I = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
-    fatorial=(float**)calloc(DIM_MATRIX_AUX,sizeof(float*));
-    StxS = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
-    mmq->matriz_pinvS = (float**)calloc(n_amostras, sizeof(float*));
-    matriz_RS = (float**)calloc(n_amostras, sizeof(float*));
-    matriz_R = (float**)calloc(n_amostras, sizeof(float*));
-    mmq->I_ant = (float***)calloc(N_FASES, sizeof(float**));
+    matriz_transposta = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
+    mmq->matriz_pSRS = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
+    matriz_inversa = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
+    mmq->I_aux = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
+    elemento_det =(double**)calloc(DIM_MATRIX_AUX,sizeof(double*));
+    mmq->I = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
+    fatorial=(double**)calloc(DIM_MATRIX_AUX,sizeof(double*));
+    StxS = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
+    mmq->matriz_pinvS = (double**)calloc(n_amostras, sizeof(double*));
+    matriz_RS = (double**)calloc(n_amostras, sizeof(double*));
+    matriz_R = (double**)calloc(n_amostras, sizeof(double*));
+    mmq->I_ant = (double***)calloc(N_FASES, sizeof(double**));
 	// Se nao for possivel alocar memoria, retornar NULL
     if (matriz_transposta == NULL) return NULL;
     if (mmq->matriz_pinvS == NULL) return NULL;
@@ -149,9 +149,9 @@ MMQ* MMQ_criar(
 	// Alocacao de memoria para cada coluna das matrizes(ponteiros de ponteiro)
     for(l = 0; l < n_amostras; l++)
     {
-        mmq->matriz_pinvS[l] = (float*)calloc(DIM_MATRIX_AUX, sizeof(float));
-        matriz_R[l] = (float*)calloc( n_amostras, sizeof(float));
-        matriz_RS[l] = (float*)calloc(DIM_MATRIX_AUX, sizeof(float));
+        mmq->matriz_pinvS[l] = (double*)calloc(DIM_MATRIX_AUX, sizeof(double));
+        matriz_R[l] = (double*)calloc( n_amostras, sizeof(double));
+        matriz_RS[l] = (double*)calloc(DIM_MATRIX_AUX, sizeof(double));
         //Se nao for possivel alocar memoria, retornar NULL
         if (mmq->matriz_pinvS[l] == NULL) return NULL;
         if (matriz_R[l] == NULL) return NULL;
@@ -160,14 +160,14 @@ MMQ* MMQ_criar(
 
     for(l=0;l<DIM_MATRIX_AUX;l++)
     {
-        matriz_inversa[l] = (float*)calloc(DIM_MATRIX_AUX,sizeof(float));
-        matriz_transposta[l] = (float*)calloc(n_amostras,sizeof(float));
-        StxS[l] = (float*)calloc(DIM_MATRIX_AUX,sizeof(float));
-        elemento_det[l] = (float*)calloc(DIM_MATRIX_AUX,sizeof(float));
-        fatorial[l] = (float*)calloc(DIM_MATRIX_AUX,sizeof(float));
-        mmq->matriz_pSRS[l] = (float*)calloc(DIM_MATRIX_AUX,sizeof(float));
-        mmq->I_aux[l] = (float*)calloc(1, sizeof(float));
-        mmq->I[l]=(float*)calloc(N_FASES, sizeof(float));
+        matriz_inversa[l] = (double*)calloc(DIM_MATRIX_AUX,sizeof(double));
+        matriz_transposta[l] = (double*)calloc(n_amostras,sizeof(double));
+        StxS[l] = (double*)calloc(DIM_MATRIX_AUX,sizeof(double));
+        elemento_det[l] = (double*)calloc(DIM_MATRIX_AUX,sizeof(double));
+        fatorial[l] = (double*)calloc(DIM_MATRIX_AUX,sizeof(double));
+        mmq->matriz_pSRS[l] = (double*)calloc(DIM_MATRIX_AUX,sizeof(double));
+        mmq->I_aux[l] = (double*)calloc(1, sizeof(double));
+        mmq->I[l]=(double*)calloc(N_FASES, sizeof(double));
     //Se nao for possivel alocar memoria, retornar NULL
         if (matriz_inversa[l] == NULL) return NULL;
         if (matriz_transposta[l] == NULL) return NULL;
@@ -181,11 +181,11 @@ MMQ* MMQ_criar(
 
     for(l=0;l<N_FASES;l++)
     {
-        mmq->I_ant[l]=(float**)calloc(DIM_MATRIX_AUX, sizeof(float));
+        mmq->I_ant[l]=(double**)calloc(DIM_MATRIX_AUX, sizeof(double));
         if (mmq->I_ant[l] == NULL) return NULL;
         for (k = 0; k < DIM_MATRIX_AUX; ++k)
         {
-            mmq->I_ant[l][k]=(float*)calloc(1, sizeof(float));
+            mmq->I_ant[l][k]=(double*)calloc(1, sizeof(double));
             if (mmq->I_ant[l][k] == NULL) return NULL;
         }
     }
@@ -206,9 +206,9 @@ MMQ* MMQ_criar(
         for (k=0;k<COMPS_SINAL;k++)
         {
             mmq->matriz_pinvS[l-1][2*k]=
-                cosf(l*comp_sinal[k]*velocidade_ang*(1/f_amostragem));
+                cosf((float) l*comp_sinal[k]*velocidade_ang*(1/f_amostragem));
             mmq->matriz_pinvS[l-1][2*k+1]=
-                sinf(l*comp_sinal[k]*velocidade_ang*(1/f_amostragem));
+                sinf((float) l*comp_sinal[k]*velocidade_ang*(1/f_amostragem));
         }
     }
 
@@ -245,13 +245,13 @@ MMQ* MMQ_criar(
 	}
 	free(mmq->matriz_pinvS);
 
-	mmq->matriz_pinvS = (float**)calloc(DIM_MATRIX_AUX, sizeof(float*));
+	mmq->matriz_pinvS = (double**)calloc(DIM_MATRIX_AUX, sizeof(double*));
 	//Se nao for possivel alocar memoria, retornar NULL
     if (mmq->matriz_pinvS == NULL) return NULL;
 	
     for(l=0;l<DIM_MATRIX_AUX;l++)
     {
-		mmq->matriz_pinvS[l]=(float*)calloc( n_amostras, sizeof(float));
+		mmq->matriz_pinvS[l]=(double*)calloc( n_amostras, sizeof(double));
 		//Se nao for possivel alocar memoria, retornar NULL
         if (mmq->matriz_pinvS[l] == NULL) return NULL;
     }
@@ -292,9 +292,9 @@ MMQ* MMQ_criar(
 
 // Definicao da funcao de multiplicacao de matrizes
 void matriz_multiplicacao(
-    float** matriz_esquerda,
-    float** matriz_direita,
-    float** matriz_saida,
+    double** matriz_esquerda,
+    double** matriz_direita,
+    double** matriz_saida,
     int linha_esquerda,
     int linha_direita,
     int coluna_direita
@@ -302,7 +302,7 @@ void matriz_multiplicacao(
 {
     //declara��o de vari�veis locais
     int l1=0,l2=0,k=0;
-    float soma=0.0f;
+    double soma=0.0f;
 
     //looping de multiplicacao
     for (l1 = 0; l1 < linha_esquerda; ++l1)
@@ -320,14 +320,14 @@ void matriz_multiplicacao(
 }
 
 // Definicao da funcao para calculo de determinante
-float determinante(
-    float** matriz_entrada,
+double determinante(
+    double** matriz_entrada,
     int dimensao,
-    float** elem_det)
+    double** elem_det)
 {
-    float s = 1.0f, det = 0.0f;
+    double s = 1.0f, det = 0.0f;
     int l, k, c, linha,coluna;
-    float** aux;
+    double** aux;
     aux=elem_det;
 
     if (dimensao == 1)
@@ -371,13 +371,13 @@ float determinante(
 
 // Definicao da funcao para calculo do cofator das matrizes
 void cofator(
-             float** matriz_entrada,
+             double** matriz_entrada,
              int dimensao,
-             float** elem_det,
-             float** matriz_saida
+             double** elem_det,
+             double** matriz_saida
              )
 {
- float** aux=elem_det;
+ double** aux=elem_det;
  int c, l1, l2, linha, coluna, k;
 
     for (l1 = 0;l1 < dimensao; l1++)
@@ -414,10 +414,10 @@ void cofator(
 
 // Definicao da funcao para calculo de transposta de matrizes
 void transposta(
-                float** matriz_entrada,
+                double** matriz_entrada,
                 int linha,
                 int coluna,
-                float** matriz_saida
+                double** matriz_saida
                 )
 {
     int l,k;
@@ -433,16 +433,16 @@ void transposta(
 
 // Definicao da funcao para calculo da inversa das matrizes
 void inversa(
-             float** matriz_entrada,
-             float** fatorial,
-             float** elem_det,
+             double** matriz_entrada,
+             double** fatorial,
+             double** elem_det,
              int dimensao,
-             float** matriz_saida
+             double** matriz_saida
              )
 {
     int l, k;
-    float** aux=fatorial;
-    float det;
+    double** aux=fatorial;
+    double det;
 
     //c�lculo do determinante
     det = determinante(matriz_entrada,dimensao,elem_det);
@@ -480,7 +480,7 @@ void MMQ_computa(MMQ* mmq)
         mmq->I[1][k]=mmq->I_aux[1][0]+mmq->matriz_pinvS[1][0]*(mmq->i_entrada[k]);
 
     // M�dulo entre I_S e I_C para estimar a amplitude de corrente
-        mmq->estimativas[k] = sqrtf(mmq->I[0][k] * (mmq->I[0][k]) +
+        mmq->estimativas[k] = sqrtf( (float) mmq->I[0][k] * (mmq->I[0][k]) +
             mmq->I[1][k] * (mmq->I[1][k]));
     // Armazenando as estimacoes anteriores
         mmq->I_ant[k][0][0] = mmq->I[0][k];

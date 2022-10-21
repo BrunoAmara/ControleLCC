@@ -23,21 +23,21 @@
 //Definindo os tipos declarados em EPLL.h
 struct FiltroPassaBanda
 {
-	volatile float *entrada;
-	volatile float *saida;
-	float y[3];		//y[0] é a saída mais atual, y[2] a mais antiga
-	float x[3];		//x[0] é a entrada mais atual, x[2] a mais antiga
-	float coefs_y[3];	//Coeficientes de y -- coefs_y[2] é o coeficiente de y[2]
-	float coefs_x[3];	//Coeficientes de x -- coefs_x[2] é o coeficiente de x[2]
+	double *entrada;
+	double *saida;
+	double y[3];		//y[0] é a saída mais atual, y[2] a mais antiga
+	double x[3];		//x[0] é a entrada mais atual, x[2] a mais antiga
+	double coefs_y[3];	//Coeficientes de y -- coefs_y[2] é o coeficiente de y[2]
+	double coefs_x[3];	//Coeficientes de x -- coefs_x[2] é o coeficiente de x[2]
 };
 
 FiltroPassaBanda*
 FiltroPassaBanda_criar(
-	volatile float *entrada,
-	volatile float *saida,
-	float psi,
-	float w0,
-	float f_amostragem)
+	double *entrada,
+	double *saida,
+	double psi,
+	double w0,
+	double f_amostragem)
 {
 
 	FiltroPassaBanda *fpb = (FiltroPassaBanda*) malloc(sizeof(FiltroPassaBanda));
@@ -50,8 +50,8 @@ FiltroPassaBanda_criar(
 	fpb->entrada = entrada;
 	fpb->saida = saida;
 
-	float a = 4*psi*w0/f_amostragem;
-	float b = w0*w0/f_amostragem/f_amostragem;
+	double a = 4*psi*w0/f_amostragem;
+	double b = w0*w0/f_amostragem/f_amostragem;
 
 	fpb->coefs_x[0] = a;
 	fpb->coefs_x[1] = 0;

@@ -36,11 +36,11 @@ typedef struct FiltroPassaBanda FiltroPassaBanda;
  */
 FiltroPassaBanda*
 FiltroPassaBanda_criar(
-	volatile float *entrada,
-	volatile float *saida,
-	float psi,
-	float w0,
-	float f_amostragem);
+	double *entrada,
+	double *saida,
+	double psi,
+	double w0,
+	double f_amostragem);
 
 /*
  *	Destroi a variável do tipo FiltroPassaBanda, liberando o espaço alocado para ela na 
